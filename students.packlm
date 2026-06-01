@@ -1,0 +1,14 @@
+# packlm:1.0 — Sample school database
+# This file demonstrates the PackLM format with two entity types.
+
+@SC school_name city country founded
+SC  "Delhi Public School"       Delhi    India  1949
+SC  "St. Xavier's High School"  Mumbai   India  1869
+SC  "The Doon School"           Dehradun India  1935
+
+@ST student_name age grade gpa city
+ST  "Alice Sharma"   20  A   3.9  Delhi
+ST  "Bob Kumar"      19  B   3.2  Mumbai
+ST  "Charlie Singh"  21  A+  3.8  Dehradun
+ST  "Diana Mehta"    20  B+  3.5  Delhi
+ST  "Ethan Patel"    22  A   4.0  Mumbai

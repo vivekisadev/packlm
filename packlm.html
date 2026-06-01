@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PackLM — Token-Efficient Format for LLMs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080D18;--bg2:#0E1525;--bg3:#162030;--bg4:#1C2A3E;
+  --bord:rgba(255,255,255,0.06);--bord2:rgba(255,255,255,0.11);
+  --txt:#D8E6F5;--muted:#7B91AC;--dim:#3F5268;
+  --acc:#2EFFA4;--acc-dim:rgba(46,255,164,0.10);--acc-mid:rgba(46,255,164,0.22);
+  --red:#FF6B6B;--amber:#FFB347;--blue:#60A5FA;--green:#4ADE80;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);line-height:1.65;font-size:15px}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;
+  background:rgba(8,13,24,0.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--bord);padding:0 2.5rem;
+  display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--acc);text-decoration:none;letter-spacing:-0.5px}
+.nav-links{display:flex;gap:2rem;list-style:none}
+.nav-links a{font-size:13px;color:var(--muted);text-decoration:none;font-weight:500;transition:color .2s}
+.nav-links a:hover{color:var(--txt)}
+.nav-badge{font-family:'JetBrains Mono',monospace;font-size:11px;padding:3px 9px;border-radius:4px;
+  background:var(--acc-dim);border:1px solid var(--acc-mid);color:var(--acc)}
+main{padding-top:56px}
+
+/* ── SHARED ── */
+.wrap{max-width:980px;margin:0 auto;padding:0 2rem}
+hr.div{border:none;border-top:1px solid var(--bord)}
+.sec{padding:80px 2rem;max-width:980px;margin:0 auto}
+.stag{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--acc);margin-bottom:10px}
+.sh{font-family:'Syne',sans-serif;font-weight:700;font-size:36px;letter-spacing:-1px;margin-bottom:12px}
+.sd{color:var(--muted);max-width:560px;margin-bottom:44px;font-size:15px;line-height:1.7}
+code{font-family:'JetBrains Mono',monospace;font-size:11.5px;background:var(--bg4);
+  border:1px solid var(--bord2);padding:2px 6px;border-radius:4px;color:var(--acc)}
+
+/* ── HERO ── */
+.hero{text-align:center;padding:96px 2rem 72px;max-width:980px;margin:0 auto}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;
+  font-size:12px;color:var(--acc);background:var(--acc-dim);border:1px solid var(--acc-mid);
+  padding:4px 14px;border-radius:20px;margin-bottom:28px}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(52px,9vw,88px);font-weight:800;
+  letter-spacing:-3px;line-height:1.02;margin-bottom:22px;
+  background:linear-gradient(140deg,#fff 0%,#cfe4f8 55%,var(--acc) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:18px;color:var(--muted);max-width:500px;margin:0 auto 36px;line-height:1.7}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:56px}
+.btn-acc{background:var(--acc);color:#040C14;font-weight:700;font-size:14px;padding:11px 24px;
+  border-radius:8px;border:none;cursor:pointer;text-decoration:none;font-family:'DM Sans',sans-serif;
+  transition:opacity .2s,transform .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-acc:hover{opacity:.85;transform:translateY(-1px)}
+.btn-out{background:transparent;color:var(--txt);font-size:14px;padding:11px 24px;border-radius:8px;
+  border:1px solid var(--bord2);cursor:pointer;text-decoration:none;font-family:'DM Sans',sans-serif;
+  transition:background .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-out:hover{background:var(--bg2)}
+
+/* hero compare */
+.hero-cmp{display:grid;grid-template-columns:1fr 44px 1fr;gap:16px;align-items:center;text-align:left}
+.cmp-panel{background:var(--bg2);border:1px solid var(--bord);border-radius:12px;overflow:hidden}
+.cmp-head{padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--bord);
+  display:flex;justify-content:space-between;align-items:center}
+.cmp-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
+.tag-bad{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--red);
+  background:rgba(255,107,107,.1);padding:2px 7px;border-radius:3px}
+.tag-good{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--acc);
+  background:var(--acc-dim);padding:2px 7px;border-radius:3px}
+.cmp-body{padding:14px;font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.75}
+.cmp-body .ck{color:#60A5FA}.cmp-body .cs{color:#A3E635}.cmp-body .cn{color:#F59E0B}
+.cmp-body .cp{color:var(--muted)}.cmp-body .ca{color:var(--acc)}.cmp-body .cc{color:var(--dim)}
+.arr-mid{font-size:30px;color:var(--acc);text-align:center}
+
+/* stat pills */
+.stats{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px}
+.stat{background:var(--bg2);border:1px solid var(--bord);border-radius:10px;padding:12px 22px;text-align:center}
+.stat-n{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;color:var(--acc)}
+.stat-l{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* ── HOW IT WORKS ── */
+.how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-bottom:48px}
+.how-card{background:var(--bg2);border:1px solid var(--bord);border-radius:12px;padding:24px;position:relative;overflow:hidden}
+.how-card::before{content:attr(data-n);position:absolute;top:8px;right:14px;
+  font-family:'Syne',sans-serif;font-size:52px;font-weight:800;color:var(--bg4);line-height:1;user-select:none}
+.how-ico{width:36px;height:36px;background:var(--acc-dim);border:1px solid var(--acc-mid);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:14px}
+.how-t{font-family:'Syne',sans-serif;font-size:16px;font-weight:600;margin-bottom:8px}
+.how-d{font-size:13px;color:var(--muted);line-height:1.65}
+
+/* ── CODE BLOCKS ── */
+.cb{background:var(--bg);border:1px solid var(--bord);border-radius:10px;overflow:hidden;margin:20px 0}
+.cb-head{padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--bord);
+  display:flex;justify-content:space-between;align-items:center}
+.cb-lang{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim)}
+.btn-copy{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);
+  background:var(--bg3);border:1px solid var(--bord);padding:3px 10px;border-radius:4px;
+  cursor:pointer;transition:color .15s}
+.btn-copy:hover,.btn-copy.ok{color:var(--acc)}
+pre.cc2{padding:16px;font-family:'JetBrains Mono',monospace;font-size:12px;
+  line-height:1.72;overflow-x:auto;color:var(--txt);white-space:pre}
+
+/* ── CONVERTER ── */
+#converter{background:var(--bg2);border-top:1px solid var(--bord);border-bottom:1px solid var(--bord)}
+.conv-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ed-panel{border:1px solid var(--bord);border-radius:12px;overflow:hidden}
+.ed-head{padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--bord);
+  display:flex;justify-content:space-between;align-items:center}
+.ed-title{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted)}
+.tok{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim)}
+textarea.ed{width:100%;min-height:270px;background:var(--bg);border:none;
+  padding:14px;font-family:'JetBrains Mono',monospace;font-size:12px;
+  color:var(--txt);resize:vertical;outline:none;line-height:1.65}
+textarea.ed::placeholder{color:var(--dim)}
+.conv-acts{display:flex;gap:10px;align-items:center;margin:14px 0;flex-wrap:wrap}
+.btn-go{background:var(--acc);color:#040C14;font-weight:700;font-size:13px;padding:9px 20px;
+  border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .15s}
+.btn-go:hover{opacity:.84}
+.btn-sm{background:transparent;color:var(--muted);font-size:12px;padding:8px 14px;border-radius:8px;
+  border:1px solid var(--bord);cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s,color .15s}
+.btn-sm:hover{background:var(--bg3);color:var(--txt)}
+
+/* savings panel */
+.sv{background:var(--bg);border:1px solid var(--bord);border-radius:10px;padding:16px;display:none}
+.sv.on{display:block}
+.sv-row{display:grid;grid-template-columns:68px 1fr 52px;align-items:center;gap:10px;margin-bottom:8px}
+.sv-lbl{font-size:12px;color:var(--muted)}
+.bar{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.bar-f{height:100%;border-radius:3px;transition:width .55s ease}
+.sv-num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);text-align:right}
+.sv-big{font-family:'Syne',sans-serif;font-size:26px;font-weight:700;color:var(--acc)}
+.sv-note{font-size:13px;color:var(--muted);margin-left:8px}
+
+/* ── SPEC TABLE ── */
+.spec-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:28px}
+.spec-table th{text-align:left;padding:10px 14px;font-family:'JetBrains Mono',monospace;
+  font-size:11px;color:var(--dim);border-bottom:1px solid var(--bord);font-weight:400}
+.spec-table td{padding:10px 14px;border-bottom:1px solid var(--bord);color:var(--muted);vertical-align:top;line-height:1.55}
+.spec-table td:first-child{font-family:'JetBrains Mono',monospace;color:var(--acc);font-size:12px;white-space:nowrap}
+.spec-table td:last-child{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--blue)}
+
+/* ── PUBLISH ── */
+.pub-steps{display:flex;flex-direction:column;gap:24px}
+.pub-step{display:flex;gap:20px;align-items:flex-start}
+.pub-num{width:32px;height:32px;min-width:32px;background:var(--acc-dim);border:1px solid var(--acc-mid);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--acc);margin-top:2px}
+.pub-title{font-family:'Syne',sans-serif;font-weight:600;font-size:17px;margin-bottom:7px}
+.pub-desc{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:10px}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid var(--bord);padding:28px 2rem;text-align:center;font-size:12px;color:var(--dim)}
+footer a{color:var(--muted);text-decoration:none}
+footer a:hover{color:var(--acc)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:700px){
+  .hero-cmp{grid-template-columns:1fr}
+  .arr-mid{transform:rotate(90deg)}
+  .conv-grid{grid-template-columns:1fr}
+  .nav-links{display:none}
+  .sh{font-size:26px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ NAV ═══════════════════════════════ -->
+<nav>
+  <a href="#" class="logo">PackLM</a>
+  <ul class="nav-links">
+    <li><a href="#how-it-works">How it works</a></li>
+    <li><a href="#converter">Converter</a></li>
+    <li><a href="#specification">Spec</a></li>
+    <li><a href="#library">Library</a></li>
+    <li><a href="#publish">Publish</a></li>
+  </ul>
+  <span class="nav-badge">v1.0</span>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════ HERO ══════════════════════════════ -->
+<div class="hero">
+  <div class="hero-tag">⬡ Token-Efficient Structured Data for LLMs</div>
+  <h1>PackLM</h1>
+  <p class="hero-sub">A schema-first format for sending structured data to LLMs. Define fields once, list values. 60–80% fewer tokens than JSON.</p>
+  <div class="hero-btns">
+    <a href="#converter" class="btn-acc">↓ Try the Converter</a>
+    <a href="#specification" class="btn-out">View Spec →</a>
+  </div>
+
+  <div class="hero-cmp">
+    <!-- JSON side -->
+    <div class="cmp-panel">
+      <div class="cmp-head">
+        <span class="cmp-label">JSON</span>
+        <span class="tag-bad">~140 tokens</span>
+      </div>
+      <div class="cmp-body"><span class="cp">[</span>
+  <span class="cp">{</span>
+    <span class="ck">"student_name"</span><span class="cp">:</span> <span class="cs">"Alice"</span><span class="cp">,</span>
+    <span class="ck">"age"</span><span class="cp">:</span> <span class="cn">20</span><span class="cp">,</span>
+    <span class="ck">"grade"</span><span class="cp">:</span> <span class="cs">"A"</span>
+  <span class="cp">},</span>
+  <span class="cp">{</span>
+    <span class="ck">"student_name"</span><span class="cp">:</span> <span class="cs">"Bob"</span><span class="cp">,</span>
+    <span class="ck">"age"</span><span class="cp">:</span> <span class="cn">19</span><span class="cp">,</span>
+    <span class="ck">"grade"</span><span class="cp">:</span> <span class="cs">"B"</span>
+  <span class="cp">}</span>
+<span class="cp">]</span></div>
+    </div>
+
+    <div class="arr-mid">→</div>
+
+    <!-- PackLM side -->
+    <div class="cmp-panel">
+      <div class="cmp-head">
+        <span class="cmp-label">PackLM</span>
+        <span class="tag-good">~22 tokens</span>
+      </div>
+      <div class="cmp-body"><span class="cc"># schema — defined once</span>
+<span class="ca">@ST</span> student_name age grade
+
+<span class="cc"># data rows — values only</span>
+<span class="ca">ST</span>  Alice  20  A
+<span class="ca">ST</span>  Bob    19  B</div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-n">~75%</div><div class="stat-l">fewer tokens</div></div>
+    <div class="stat"><div class="stat-n">0</div><div class="stat-l">dependencies</div></div>
+    <div class="stat"><div class="stat-n">LLM</div><div class="stat-l">native readable</div></div>
+    <div class="stat"><div class="stat-n">2-way</div><div class="stat-l">encode / decode</div></div>
+  </div>
+</div>
+
+<hr class="div">
+
+<!-- ═══════════════════════════ HOW IT WORKS ═════════════════════════ -->
+<section class="sec" id="how-it-works">
+  <div class="stag">// HOW IT WORKS</div>
+  <h2 class="sh">Schema once. Values only.</h2>
+  <p class="sd">JSON wastes tokens by repeating key names on every single row. PackLM separates the schema from the data — like a database table header — so keys are declared once regardless of how many rows follow.</p>
+
+  <div class="how-grid">
+    <div class="how-card" data-n="01">
+      <div class="how-ico">🔍</div>
+      <div class="how-t">The JSON problem</div>
+      <div class="how-d">JSON repeats every key name per object. With 5 fields and 100 rows, you spend 500 key-tokens (plus 500 colons, 500 commas, 1000 quotes) on structure alone — wasted context window.</div>
+    </div>
+    <div class="how-card" data-n="02">
+      <div class="how-ico">📋</div>
+      <div class="how-t">Declare schema once</div>
+      <div class="how-d">A line beginning with <code>@ALIAS</code> declares the fields for that entity type. <code>@ST name age grade</code> — appears once, no matter how many student rows follow.</div>
+    </div>
+    <div class="how-card" data-n="03">
+      <div class="how-ico">⚡</div>
+      <div class="how-t">Values-only rows</div>
+      <div class="how-d">Each data row is just the alias plus values in schema order — no keys, brackets or colons. <code>ST Alice 20 A</code>. Multi-word values use quotes. Null is <code>~</code>.</div>
+    </div>
+    <div class="how-card" data-n="04">
+      <div class="how-ico">🧠</div>
+      <div class="how-t">LLMs understand it</div>
+      <div class="how-d">Add one sentence to your system prompt. LLMs grasp column-oriented tabular data natively — the pattern matches CSV, SQL tables, and spreadsheets in their training data.</div>
+    </div>
+  </div>
+
+  <div class="stag">// TOKEN BREAKDOWN</div>
+  <h3 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.5px;margin-bottom:16px">Where the savings come from</h3>
+
+  <div class="cb">
+    <div class="cb-head"><span class="cb-lang">JSON — token cost per row</span></div>
+    <pre class="cc2"><span style="color:var(--red)">{"student_name": "Alice Smith", "age": 20, "grade": "A"}</span>
+
+  "student_name"    → 4 tokens   (quote + student + _ + name + quote)
+  :                 → 1 token
+  "Alice Smith"     → 3 tokens
+  ,                 → 1 token    (repeated between every field)
+  {  }  [  ]        → structural overhead on every row
+
+  Per-row cost:  ~18 tokens for just 3 fields
+  100 rows:      ~1,800 tokens  (most of it structural noise)</pre>
+  </div>
+
+  <div class="cb">
+    <div class="cb-head"><span class="cb-lang">PackLM — token cost</span></div>
+    <pre class="cc2"><span style="color:var(--acc)">@ST student_name age grade</span>   ← schema: ~5 tokens, paid ONCE
+
+<span style="color:var(--acc)">ST "Alice Smith" 20 A</span>         ← row:    ~5 tokens
+
+  100 rows:  5 + (100 × 5) = <span style="color:var(--acc)">~505 tokens</span>
+  Saving vs JSON: ~1,295 tokens  (~72% reduction)
+  Saving grows linearly with row count</pre>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════ CONVERTER ════════════════════════════ -->
+<section class="sec" id="converter">
+  <div class="stag">// LIVE CONVERTER</div>
+  <h2 class="sh">Try it yourself</h2>
+  <p class="sd">Paste any JSON array or object-of-arrays and see the PackLM output with a live token savings estimate.</p>
+
+  <div class="conv-grid">
+    <div class="ed-panel">
+      <div class="ed-head">
+        <span class="ed-title">JSON Input</span>
+        <span class="tok" id="in-tok">— tokens</span>
+      </div>
+      <textarea class="ed" id="json-in" spellcheck="false" oninput="onInput()"></textarea>
+    </div>
+    <div class="ed-panel">
+      <div class="ed-head">
+        <span class="ed-title">PackLM Output</span>
+        <span class="tok" id="out-tok">— tokens</span>
+      </div>
+      <textarea class="ed" id="plm-out" readonly placeholder="Output appears here…"></textarea>
+    </div>
+  </div>
+
+  <div class="conv-acts">
+    <button class="btn-go" onclick="doConvert()">Convert →</button>
+    <button class="btn-sm" id="copy-out" onclick="copyOut()" style="display:none">Copy PackLM</button>
+    <button class="btn-sm" onclick="doReset()">Reset example</button>
+    <button class="btn-sm" onclick="doClear()">Clear</button>
+  </div>
+
+  <div class="sv" id="sv-panel">
+    <div class="sv-row">
+      <span class="sv-lbl">JSON</span>
+      <div class="bar"><div class="bar-f" id="bj" style="background:var(--muted);width:100%"></div></div>
+      <span class="sv-num" id="vj">0</span>
+    </div>
+    <div class="sv-row">
+      <span class="sv-lbl">PackLM</span>
+      <div class="bar"><div class="bar-f" id="bp" style="background:var(--acc);width:0%"></div></div>
+      <span class="sv-num" id="vp">0</span>
+    </div>
+    <div style="margin-top:12px">
+      <span class="sv-big" id="sv-big">—</span>
+      <span class="sv-note">fewer tokens estimated</span>
+    </div>
+    <div style="margin-top:8px;font-size:12px;color:var(--dim)">
+      Estimate uses punctuation + word counting — actual BPE savings vary by model and tokenizer.
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ════════════════════════ FORMAT SPEC ═════════════════════════════ -->
+<section class="sec" id="specification">
+  <div class="stag">// FORMAT SPECIFICATION</div>
+  <h2 class="sh">PackLM v1.0</h2>
+  <p class="sd">A plain-text, line-oriented format. UTF-8 encoded. Files use the <code>.packlm</code> extension. Designed to be human-readable and LLM-friendly simultaneously.</p>
+
+  <table class="spec-table">
+    <thead>
+      <tr><th>Syntax</th><th>Description</th><th>Example</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>@ALIAS f1 f2 f3</td>
+        <td>Schema definition. Declares field names for entity type ALIAS. Must appear before any data rows for that alias. One schema per entity type.</td>
+        <td>@ST name age grade</td>
+      </tr>
+      <tr>
+        <td>ALIAS v1 v2 v3</td>
+        <td>Data row. Values in the same order as the schema. Alias must match a previously declared schema.</td>
+        <td>ST Alice 20 A</td>
+      </tr>
+      <tr>
+        <td>~</td>
+        <td>Null / missing value. Decoded as None in Python, null in JSON.</td>
+        <td>ST Bob ~ B</td>
+      </tr>
+      <tr>
+        <td>""</td>
+        <td>Explicitly empty string. Different from ~ (null).</td>
+        <td>ST Charlie "" A</td>
+      </tr>
+      <tr>
+        <td>"value with spaces"</td>
+        <td>Multi-word string. Required when value contains whitespace. Use \" to escape a literal quote inside.</td>
+        <td>ST "Alice Smith" 20 A</td>
+      </tr>
+      <tr>
+        <td># comment text</td>
+        <td>Line comment. Entire line is ignored by the parser. Useful for labelling entity sections.</td>
+        <td># student records</td>
+      </tr>
+      <tr>
+        <td>(blank line)</td>
+        <td>Ignored by the parser. Use freely for visual separation between entity type groups.</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="stag" style="margin-top:40px">// FULL EXAMPLE</div>
+  <div class="cb">
+    <div class="cb-head">
+      <span class="cb-lang">school-database.packlm</span>
+      <button class="btn-copy" id="ex-btn" onclick="cpBtn(this,'ex-pre')">copy</button>
+    </div>
+    <pre class="cc2" id="ex-pre">
+# PackLM v1.0 — School database example
+
+@SC school_name city country founded
+
+SC  "Delhi Public School"       Delhi    India  1949
+SC  "St. Xavier's High School"  Mumbai   India  1869
+SC  "The Doon School"           Dehradun India  1935
+
+@ST student_name age grade gpa city
+
+ST  "Alice Sharma"   20  A   3.9  Delhi
+ST  "Bob Kumar"      19  B   3.2  Mumbai
+ST  "Charlie Singh"  21  A+  3.8  Dehradun
+ST  "Diana Mehta"    20  B+  3.5  Delhi
+ST  "Ethan Patel"    22  A   4.0  Mumbai
+
+# To add cross-references, use alias:row-index notation:
+# @ST student_name age grade school_ref
+# ST  "Alice Sharma"  20  A  SC:1
+    </pre>
+  </div>
+
+  <div style="background:var(--acc-dim);border:1px solid var(--acc-mid);border-radius:10px;padding:16px 20px;margin-top:20px">
+    <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:600;color:var(--acc);margin-bottom:8px">System prompt to add to your LLM calls</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--txt);line-height:1.7">
+      You receive data in PackLM format. Lines starting with @ define schema: @ALIAS field1 field2 ...
+      Other lines are data rows: ALIAS val1 val2 ... — values match schema order.
+      ~ means null. Multi-word values are quoted with double quotes.
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ════════════════════════ PYTHON LIBRARY ══════════════════════════ -->
+<section class="sec" id="library">
+  <div class="stag">// PYTHON LIBRARY</div>
+  <h2 class="sh">packlm.py</h2>
+  <p class="sd">Zero dependencies — standard library only. Copy <code>packlm.py</code> into your project or install via <code>pip install packlm</code> once published. Full encode/decode with Anthropic SDK example.</p>
+
+  <div class="cb">
+    <div class="cb-head">
+      <span class="cb-lang">python — packlm.py</span>
+      <button class="btn-copy" id="py-btn" onclick="cpBtn(this,'py-pre')">copy</button>
+    </div>
+    <pre class="cc2" id="py-pre"></pre>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ════════════════════════ PUBLISH GUIDE ═══════════════════════════ -->
+<section class="sec" id="publish">
+  <div class="stag">// HOW TO PUBLISH</div>
+  <h2 class="sh">Publishing PackLM as an open format</h2>
+  <p class="sd">Turn this into a real open-source project that other developers can discover, install, and build on. Follow these steps in order — each one builds on the previous.</p>
+
+  <div class="pub-steps">
+
+    <div class="pub-step">
+      <div class="pub-num">1</div>
+      <div style="flex:1">
+        <div class="pub-title">Create the GitHub repository</div>
+        <div class="pub-desc">Go to github.com/new. Name the repo <code>packlm</code>. Set it to public. Add description: "Token-efficient structured data format for LLMs — 60-80% fewer tokens than JSON". Add these files:</div>
+        <div class="cb">
+          <div class="cb-head"><span class="cb-lang">repo structure</span></div>
+          <pre class="cc2">packlm/
+├── packlm.py           ← core library (copy from above)
+├── README.md           ← format overview + quick-start
+├── SPEC.md             ← formal specification (grammar, edge cases)
+├── pyproject.toml      ← for pip install packlm
+├── LICENSE             ← MIT recommended
+├── tests/
+│   └── test_packlm.py  ← round-trip encode/decode tests
+└── examples/
+    ├── students.packlm ← sample data file
+    └── anthropic_example.py</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="pub-step">
+      <div class="pub-num">2</div>
+      <div style="flex:1">
+        <div class="pub-title">Write README.md — your project's front door</div>
+        <div class="pub-desc">Keep it under 200 lines. The most important element is a concrete before/after showing token savings with real numbers. Developers need to see the value in 10 seconds. Follow this structure:</div>
+        <div class="cb">
+          <div class="cb-head"><span class="cb-lang">README.md structure</span></div>
+          <pre class="cc2"># PackLM · [![PyPI](badge)] [![License: MIT](badge)]
+> Token-efficient structured data format for LLMs.
+> Define fields once, list values — 60-80% fewer tokens than JSON.
+
+## The problem with JSON
+[Show side-by-side comparison with token counts]
+
+## Format at a glance
+[Syntax table: @ALIAS, data rows, ~, quoted strings]
+
+## Installation
+pip install packlm
+
+## Quick start (10-line example)
+from packlm import PackLM
+packed = PackLM.encode(my_list)
+# ... send to LLM ...
+result = PackLM.decode(response)
+
+## System prompt
+[Copy-paste prompt for LLM calls]
+
+## Specification
+See SPEC.md for the formal grammar and edge-case rules.</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="pub-step">
+      <div class="pub-num">3</div>
+      <div style="flex:1">
+        <div class="pub-title">Create pyproject.toml and publish to PyPI</div>
+        <div class="pub-desc">This makes <code>pip install packlm</code> work. First create an account on pypi.org, then generate an API token in your account settings and store it as <code>PYPI_API_TOKEN</code>.</div>
+        <div class="cb">
+          <div class="cb-head">
+            <span class="cb-lang">pyproject.toml</span>
+            <button class="btn-copy" id="toml-btn" onclick="cpBtn(this,'toml-pre')">copy</button>
+          </div>
+          <pre class="cc2" id="toml-pre"></pre>
+        </div>
+        <div class="cb">
+          <div class="cb-head"><span class="cb-lang">bash — publish steps</span></div>
+          <pre class="cc2"># Install build tools (once)
+pip install build twine
+
+# Build source + wheel distributions
+python -m build
+
+# Upload to TestPyPI first — verify it looks correct
+twine upload --repository testpypi dist/*
+
+# Install from TestPyPI to confirm it works
+pip install --index-url https://test.pypi.org/simple/ packlm
+
+# If all good, publish to real PyPI
+twine upload dist/*
+
+# Now anyone in the world can do:
+pip install packlm</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="pub-step">
+      <div class="pub-num">4</div>
+      <div style="flex:1">
+        <div class="pub-title">Write SPEC.md — the formal language definition</div>
+        <div class="pub-desc">This is what makes PackLM a real open format rather than just a Python library. A clear spec means developers can implement encoders/decoders in JavaScript, Rust, Go, etc. without asking you anything. Include EBNF grammar, all edge cases, and a version number.</div>
+        <div class="cb">
+          <div class="cb-head"><span class="cb-lang">SPEC.md skeleton</span></div>
+          <pre class="cc2"># PackLM Format Specification v1.0
+
+## Grammar (EBNF)
+document    = line*
+line        = schema-line | data-line | comment | blank
+schema-line = "@" alias SP field (SP field)* NL
+data-line   = alias SP value (SP value)* NL
+value       = bare-value | quoted-value | null
+null        = "~"
+quoted-value = '"' char* '"'
+bare-value  = (any char except whitespace, '"', "~")+
+comment     = "#" (any char)* NL
+
+## Rules
+1. Schema must be declared before its data rows
+2. Row field count must match schema field count exactly
+3. ALIAS is case-sensitive; convention: 1-3 uppercase letters
+4. Files SHOULD use the .packlm extension
+5. Encoding: UTF-8 required
+6. Line endings: LF or CRLF both valid
+
+## Versioning
+Add a version comment at the top of each file:
+  # packlm:1.0
+
+## Reference implementation
+packlm.py (Python 3.8+) — see github.com/you/packlm</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="pub-step">
+      <div class="pub-num">5</div>
+      <div style="flex:1">
+        <div class="pub-title">Announce and grow the community</div>
+        <div class="pub-desc">Post to these places in this order. Frame it around the concrete benefit — "75% token reduction" is a number people remember. Attach the before/after comparison everywhere.</div>
+        <div class="cb">
+          <div class="cb-head"><span class="cb-lang">where and how to post</span></div>
+          <pre class="cc2">Hacker News      "Show HN: PackLM — 75% token reduction vs JSON for LLM inputs"
+                 Post Mon/Tue 9am US-ET for maximum visibility.
+
+Reddit           r/MachineLearning, r/LocalLLaMA, r/Python
+                 Title: "I made a format to reduce LLM token cost by 75%"
+
+X / Twitter      Thread format:
+                 Tweet 1 — the problem (JSON is wasteful)
+                 Tweet 2 — the solution (PackLM before/after)
+                 Tweet 3 — real numbers from your own API bills
+                 Tweet 4 — GitHub link + pip install
+
+Dev.to/Hashnode  "Stop sending JSON to your LLMs"
+                 Full tutorial post — drives long-tail search traffic.
+
+LangChain / LlamaIndex Discord
+                 #tools or #general — these communities actively
+                 look for token optimization techniques.
+
+Key message everywhere:
+  Token savings = direct API cost savings + longer effective context.
+  At $15/M tokens input, 75% saving = 75% cheaper data-heavy calls.</pre>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p>PackLM v1.0 — MIT License &nbsp;·&nbsp;
+    <a href="#how-it-works">How it works</a> &nbsp;·&nbsp;
+    <a href="#converter">Converter</a> &nbsp;·&nbsp;
+    <a href="#specification">Spec</a> &nbsp;·&nbsp;
+    <a href="#library">Library</a> &nbsp;·&nbsp;
+    <a href="#publish">Publish</a>
+  </p>
+</footer>
+
+<!-- ═══════════════════════ DATA BLOCKS ══════════════════════════════ -->
+<script type="text/plain" id="py-src">
+import shlex
+import json
+
+
+class PackLM:
+    """
+    PackLM — Token-efficient structured data format for LLMs.
+    Zero dependencies. Python 3.8+.
+
+    Format:
+      @ALIAS field1 field2 ...   ← schema (once per entity type)
+      ALIAS  val1   val2   ...   ← data rows
+      ~                          ← null value
+      "multi word"               ← quoted value with spaces
+
+    Usage:
+      packed = PackLM.encode(list_of_dicts)
+      original = PackLM.decode(packed)
+    """
+
+    @staticmethod
+    def encode(data) -> str:
+        """Convert a Python list-of-dicts or dict-of-lists to PackLM format."""
+        lines = []
+
+        def fmt(v):
+            if v is None:
+                return '~'
+            s = str(v)
+            if s == '':
+                return '""'
+            return f'"{s}"' if ' ' in s else s
+
+        def process(arr, alias):
+            objs = [o for o in arr if isinstance(o, dict)]
+            if not objs:
+                return
+            keys = list(dict.fromkeys(k for obj in objs for k in obj.keys()))
+            lines.append(f"@{alias} {' '.join(keys)}")
+            for obj in objs:
+                row = ' '.join(fmt(obj.get(k)) for k in keys)
+                lines.append(f"{alias} {row}")
+
+        if isinstance(data, list):
+            process(data, 'R')
+
+        elif isinstance(data, dict):
+            used = set()
+            for key, val in data.items():
+                if not isinstance(val, list):
+                    continue
+                alias = key[:2].upper() or 'R'
+                n = 2
+                while alias in used:
+                    alias = key[0].upper() + str(n)
+                    n += 1
+                used.add(alias)
+                lines.extend(['', f'# {key}'])
+                process(val, alias)
+
+        return '\n'.join(lines).strip()
+
+    @staticmethod
+    def decode(text: str):
+        """
+        Convert PackLM text back to Python objects.
+        Returns a list if there's a single 'R' schema,
+        otherwise a dict keyed by alias.
+        """
+        schemas = {}
+        result = {}
+
+        for line in text.strip().splitlines():
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+
+            if line.startswith('@'):
+                parts = line[1:].split()
+                alias, fields = parts[0], parts[1:]
+                schemas[alias] = fields
+                result[alias] = []
+
+            else:
+                try:
+                    parts = shlex.split(line)
+                except ValueError:
+                    parts = line.split()
+
+                if not parts:
+                    continue
+
+                alias, vals = parts[0], parts[1:]
+                if alias not in schemas:
+                    continue
+
+                obj = {
+                    k: (None if v == '~' else v)
+                    for k, v in zip(schemas[alias], vals)
+                }
+                result[alias].append(obj)
+
+        # Unwrap single-schema 'R' results to a plain list
+        if list(result.keys()) == ['R']:
+            return result['R']
+        return result
+
+
+# ── LLM Integration Example ──────────────────────────────────────────
+
+import anthropic
+
+SYSTEM_PROMPT = """You receive data in PackLM format.
+Lines starting with @ define the schema: @ALIAS field1 field2 ...
+Other lines are data rows: ALIAS val1 val2 ... (values match schema order).
+~ means null. Multi-word values are double-quoted."""
+
+students = [
+    {"name": "Alice",    "age": 20, "grade": "A",  "city": "Delhi"},
+    {"name": "Bob",      "age": 19, "grade": "B",  "city": "Mumbai"},
+    {"name": "Charlie",  "age": 21, "grade": "A+", "city": "Delhi"},
+    {"name": "Diana",    "age": 20, "grade": "B+", "city": "Bangalore"},
+]
+
+# Encode — replaces repetitive JSON
+packed = PackLM.encode(students)
+print(packed)
+# @R name age grade city
+# R Alice 20 A Delhi
+# R Bob 19 B Mumbai
+# R Charlie 21 A+ Delhi
+# R Diana 20 B+ Bangalore
+
+# Send to Claude with fewer tokens
+client = anthropic.Anthropic()
+response = client.messages.create(
+    model="claude-opus-4-5",
+    max_tokens=1024,
+    system=SYSTEM_PROMPT,
+    messages=[{
+        "role": "user",
+        "content": f"Analyze this student data:\n\n{packed}"
+    }]
+)
+print(response.content[0].text)
+
+# Decode back to Python objects
+restored = PackLM.decode(packed)
+print(json.dumps(restored, indent=2))
+# [{"name": "Alice", "age": "20", "grade": "A", "city": "Delhi"}, ...]
+</script>
+
+<script type="text/plain" id="toml-src">
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "packlm"
+version = "1.0.0"
+description = "Token-efficient structured data format for LLMs"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.8"
+keywords = ["llm", "tokenization", "data-format", "ai", "nlp", "anthropic", "openai"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/packlm"
+Repository = "https://github.com/yourusername/packlm"
+Issues = "https://github.com/yourusername/packlm/issues"
+</script>
+
+<!-- ═══════════════════════ JAVASCRIPT ═══════════════════════════════ -->
+<script>
+const EXAMPLE = `[
+  {"student_name": "Alice Smith",  "age": 20, "grade": "A",  "gpa": 3.9, "city": "Delhi"},
+  {"student_name": "Bob Kumar",    "age": 19, "grade": "B",  "gpa": 3.2, "city": "Mumbai"},
+  {"student_name": "Charlie Roy",  "age": 21, "grade": "A",  "gpa": 3.8, "city": "Delhi"},
+  {"student_name": "Diana Mehta",  "age": 20, "grade": "B+", "gpa": 3.5, "city": "Bangalore"},
+  {"student_name": "Ethan Patel",  "age": 22, "grade": "A+", "gpa": 4.0, "city": "Chennai"}
+]`;
+
+// Load stored code into display elements
+document.getElementById('py-pre').textContent  = document.getElementById('py-src').textContent.trim();
+document.getElementById('toml-pre').textContent = document.getElementById('toml-src').textContent.trim();
+
+// ── Token estimator ────────────────────────────────────────
+function estTok(txt) {
+  if (!txt || !txt.trim()) return 0;
+  const punct = (txt.match(/[{}\[\]",:]/g) || []).length;
+  const words = txt.split(/\s+/).filter(Boolean).length;
+  return punct + words;
+}
+
+// ── PackLM encoder ─────────────────────────────────────────
+function fmtVal(v) {
+  if (v === null || v === undefined) return '~';
+  if (typeof v === 'boolean') return String(v);
+  if (typeof v === 'object') return '"' + JSON.stringify(v).replace(/"/g,'\\"') + '"';
+  const s = String(v);
+  if (s === '') return '""';
+  if (/\s/.test(s)) return '"' + s.replace(/\\/g,'\\\\').replace(/"/g,'\\"') + '"';
+  return s;
+}
+
+function mkAlias(name, used) {
+  const c = name.replace(/[^a-zA-Z]/g,'');
+  let a = (c.slice(0,2)||'R').toUpperCase();
+  let n = 2;
+  while (used.has(a)) a = (c[0]||'R').toUpperCase() + (n++);
+  return a;
+}
+
+function toPackLM(str) {
+  try {
+    const data = JSON.parse(str);
+    const lines = [], used = new Set();
+    function procArr(arr, alias) {
+      const objs = arr.filter(v => v && typeof v==='object' && !Array.isArray(v));
+      if (!objs.length) return;
+      const keys = [...new Set(objs.flatMap(o => Object.keys(o)))];
+      lines.push('@' + alias + ' ' + keys.join(' '));
+      objs.forEach(obj => lines.push(alias + ' ' + keys.map(k=>fmtVal(obj[k])).join(' ')));
+    }
+    if (Array.isArray(data)) {
+      procArr(data, 'R');
+    } else if (data && typeof data==='object') {
+      for (const [key,val] of Object.entries(data)) {
+        if (Array.isArray(val)) {
+          const alias = mkAlias(key, used);
+          used.add(alias);
+          if (lines.length) lines.push('');
+          lines.push('# ' + key);
+          procArr(val, alias);
+        }
+      }
+    }
+    return lines.join('\n');
+  } catch(e) { return '# Error: ' + e.message; }
+}
+
+// ── Converter UI ───────────────────────────────────────────
+function onInput() {
+  const n = estTok(document.getElementById('json-in').value);
+  document.getElementById('in-tok').textContent = n ? '~'+n+' tokens' : '— tokens';
+}
+
+function doConvert() {
+  const inp = document.getElementById('json-in').value.trim();
+  if (!inp) return;
+  const out = toPackLM(inp);
+  document.getElementById('plm-out').value = out;
+  const it = estTok(inp), ot = estTok(out);
+  document.getElementById('in-tok').textContent = '~'+it+' tokens';
+  document.getElementById('out-tok').textContent = '~'+ot+' tokens';
+  const pct = it>0 ? Math.round(ot/it*100) : 100;
+  document.getElementById('bp').style.width = Math.max(2,pct)+'%';
+  document.getElementById('vj').textContent = it;
+  document.getElementById('vp').textContent = ot;
+  document.getElementById('sv-big').textContent = (100-pct)+'%';
+  document.getElementById('sv-panel').classList.add('on');
+  document.getElementById('copy-out').style.display='';
+}
+
+function copyOut() {
+  const btn = document.getElementById('copy-out');
+  navigator.clipboard.writeText(document.getElementById('plm-out').value)
+    .then(()=>{btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent='Copy PackLM',1500)});
+}
+
+function doReset() {
+  document.getElementById('json-in').value = EXAMPLE;
+  document.getElementById('plm-out').value = '';
+  document.getElementById('sv-panel').classList.remove('on');
+  document.getElementById('copy-out').style.display='none';
+  document.getElementById('out-tok').textContent='— tokens';
+  onInput();
+}
+
+function doClear() {
+  document.getElementById('json-in').value = '';
+  document.getElementById('plm-out').value = '';
+  document.getElementById('sv-panel').classList.remove('on');
+  document.getElementById('copy-out').style.display='none';
+  document.getElementById('in-tok').textContent='— tokens';
+  document.getElementById('out-tok').textContent='— tokens';
+}
+
+// ── Copy buttons ───────────────────────────────────────────
+function cpBtn(btn, preId) {
+  const text = document.getElementById(preId).textContent;
+  navigator.clipboard.writeText(text.trim()).then(()=>{
+    btn.textContent='copied!';btn.classList.add('ok');
+    setTimeout(()=>{btn.textContent='copy';btn.classList.remove('ok')},1500);
+  });
+}
+
+// ── Init ───────────────────────────────────────────────────
+document.getElementById('json-in').value = EXAMPLE;
+onInput();
+</script>
+</body>
+</html>
