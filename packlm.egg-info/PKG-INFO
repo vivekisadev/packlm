@@ -1,3 +1,28 @@
+Metadata-Version: 2.4
+Name: packlm
+Version: 1.0.0
+Summary: Token-efficient structured data format for LLMs
+License: MIT
+Project-URL: Homepage, https://github.com/yourusername/packlm
+Project-URL: Repository, https://github.com/yourusername/packlm
+Project-URL: Issues, https://github.com/yourusername/packlm/issues
+Keywords: llm,tokenization,data-format,ai,nlp,anthropic,openai
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Dynamic: license-file
+
 # PackLM · ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg) ![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue)
 
 > **Token-efficient structured data format for LLMs.**  
@@ -36,23 +61,6 @@ R "Charlie Roy"  21  A+  Delhi
 | 500 rows, 4 fields | ~9,000 tokens | ~2,505 tokens | **~72%** |
 
 Saving grows **linearly with row count** — the schema cost is paid once.
-
----
-
-## 🌐 Live Converter & Docs
-
-We have built a beautiful, fast web app for PackLM!
-
-**Try it out:** Open the Live Converter to paste your JSON and instantly see how PackLM transforms it while calculating your exact token savings in real time. 
-
-The website also contains the full **Premium Documentation** and format specification.
-
-**Run the website locally:**
-```bash
-cd website
-npm install
-npm run dev
-```
 
 ---
 
