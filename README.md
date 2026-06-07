@@ -59,7 +59,11 @@ npm run dev
 ## Installation
 
 ```bash
+# New users
 pip install packlm
+
+# Existing users (upgrading from v1.0)
+pip install --upgrade packlm
 ```
 
 Or just copy `packlm.py` into your project — zero dependencies, standard library only.
@@ -114,10 +118,13 @@ response = client.messages.create(
 
 **System prompt to add to any LLM call:**
 ```
-You receive data in PackLM format.
-Lines starting with @ define the schema: @ALIAS field1 field2 ...
-Other lines are data rows: ALIAS val1 val2 ... — values match schema order.
-~ means null. Multi-word values are double-quoted.
+You receive data in PackLM v2 format.
+@ lines define schemas: @ALIAS field1 field2 ...
+Data rows: ALIAS val1 val2 ... (values match schema order).
+~ = null | "" = empty | a|b|c = array | a.b = nested key
+# meta:name  -> single plain dict (one-row schema, not a list)
+@key v1 v2 v3 -> inline primitive list (@lowercase = list, @UPPERCASE = schema)
+# child:name -> child table linked to parent by _ref index
 ```
 
 ---
@@ -183,13 +190,15 @@ See [SPEC.md](SPEC.md) for the full grammar, edge cases, and rules for implement
 
 ## Contributing
 
-PRs welcome! See [issues](https://github.com/yourusername/packlm/issues) for ideas.
+PackLM is open-source and community-driven. If you have any new ideas or feature requests, **make sure to raise an issue on GitHub**.
 
-Things that would be great:
+I will personally preview the idea, and once approved, grant you permission as a contributor so you can push your changes directly!
+
+Things we are actively looking for:
 - JavaScript / TypeScript implementation
-- Rust implementation
+- Rust / Go / Java implementations
+- Integrations with LangChain and LlamaIndex
 - Benchmarks against real tokenizers (tiktoken, sentencepiece)
-- Streaming decoder
 
 ---
 

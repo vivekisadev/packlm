@@ -238,15 +238,19 @@ export default function Docs() {
           <div className="stag" style={{ marginTop: '40px' }}>// FULL EXAMPLE</div>
           <CodeBlock title="school-database.packlm" code={EXAMPLE_PACKLM} />
 
-          <div style={{ background: 'var(--acc-dim)', border: '1px solid var(--acc-mid)', borderRadius: '10px', padding: '16px 20px', marginTop: '20px' }}>
-            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: '15px', fontWeight: '600', color: 'var(--acc)', marginBottom: '8px' }}>System prompt to add to your LLM calls</div>
-            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: 'var(--txt)', lineHeight: '1.7' }}>
-              You receive data in PackLM format. Lines starting with @ define schema: @ALIAS field1 field2 ...
-              Other lines are data rows: ALIAS val1 val2 ... — values match schema order.
-              ~ means null. Multi-word values are quoted with double quotes.
+            <div style={{ background: 'var(--acc-dim)', border: '1px solid var(--acc-mid)', borderRadius: '10px', padding: '16px 20px', marginTop: '20px' }}>
+              <div style={{ fontFamily: "'Syne',sans-serif", fontSize: '15px', fontWeight: '600', color: 'var(--acc)', marginBottom: '8px' }}>System prompt to add to your LLM calls</div>
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '12px', color: 'var(--txt)', lineHeight: '1.7', whiteSpace: 'pre-wrap' }}>
+{`You receive data in PackLM v2 format.
+@ lines define schemas: @ALIAS field1 field2 ...
+Data rows: ALIAS val1 val2 ... (values match schema order).
+~ = null | "" = empty | a|b|c = array | a.b = nested key
+# meta:name  -> single plain dict (one-row schema, not a list)
+@key v1 v2 v3 -> inline primitive list (@lowercase = list, @UPPERCASE = schema)
+# child:name -> child table linked to parent by _ref index`}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
 
         <hr className="div" style={{ margin: '60px 0' }} />
 
@@ -256,7 +260,10 @@ export default function Docs() {
           <p className="sd">Zero dependencies — standard library only. You can install it via pip or just drop <code>packlm.py</code> into your project. Below is a guide on how to use it.</p>
 
           <h3 id="installation" style={{ fontFamily: "'Syne',sans-serif", fontSize: '22px', fontWeight: '700', letterSpacing: '-0.5px', marginBottom: '16px', marginTop: '32px' }}>Installation</h3>
+          <p className="sd" style={{ marginBottom: '12px' }}>For new users, simply install via pip:</p>
           <CodeBlock title="bash" code="pip install packlm" />
+          <p className="sd" style={{ marginTop: '16px', marginBottom: '12px' }}>If you previously used version 1.0, you must explicitly upgrade to get v2.1 nested JSON support:</p>
+          <CodeBlock title="bash" code="pip install --upgrade packlm" />
 
           <h3 id="quick-start" style={{ fontFamily: "'Syne',sans-serif", fontSize: '22px', fontWeight: '700', letterSpacing: '-0.5px', marginBottom: '16px', marginTop: '40px' }}>Quick Start</h3>
           <CodeBlock title="python" code={`from packlm import PackLM
@@ -292,8 +299,8 @@ response = client.messages.create(
 )`} />
 
           <h3 style={{ fontFamily: "'Syne',sans-serif", fontSize: '22px', fontWeight: '700', letterSpacing: '-0.5px', marginBottom: '16px', marginTop: '40px' }}>packlm.py source</h3>
-          <p className="sd" style={{ marginBottom: '16px' }}>If you don't want to use pip, just copy this file into your project.</p>
-          <CodeBlock title="python — packlm.py" code={PYTHON_SRC} />
+          <p className="sd" style={{ marginBottom: '16px' }}>If you don't want to use pip, just copy the latest v2 script directly from our GitHub repository.</p>
+          <a href="https://github.com/vivekisadev/packlm" target="_blank" rel="noreferrer" style={{ color: 'var(--acc)', textDecoration: 'underline' }}>View source on GitHub</a>
         </section>
       </div>
     </div>
