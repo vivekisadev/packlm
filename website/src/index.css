@@ -304,3 +304,73 @@ footer a:hover{color:var(--acc)}
   .nav-links{display:none}
   .sh{font-size:26px}
 }
+
+/* ── PREMIUM UI REDESIGN CLASSES ── */
+.glass-panel {
+  background: rgba(20, 28, 43, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(46, 255, 164, 0.4), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.glass-panel:hover::before {
+  opacity: 1;
+}
+
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+  border-color: rgba(46, 255, 164, 0.3);
+}
+
+.anim-slide-up {
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.glow-text {
+  background: linear-gradient(140deg, #fff 0%, #cfe4f8 55%, var(--acc) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.timeline-line {
+  position: absolute;
+  left: 31px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--acc) 0%, rgba(46, 255, 164, 0.1) 50%, transparent 100%);
+}
+
+@keyframes slideUp {
+  0% { transform: translateY(40px) scale(0.95); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 0 0 rgba(46, 255, 164, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(46, 255, 164, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(46, 255, 164, 0); }
+}
+
+.pulse-badge {
+  animation: pulseGlow 2.5s infinite cubic-bezier(0.66, 0, 0, 1);
+}

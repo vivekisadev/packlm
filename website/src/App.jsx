@@ -61,14 +61,13 @@ function App() {
       </main>
       <Footer />
       {showToast && (
-        <div style={{ position: 'fixed', bottom: '24px', right: '24px', background: 'var(--acc)', color: 'white', padding: '16px 20px', borderRadius: '12px', zIndex: 1000, boxShadow: '0 10px 30px rgba(0,0,0,0.2)', display: 'flex', gap: '16px', alignItems: 'flex-start', maxWidth: '350px' }}>
+        <div className="anim-slide-up" style={{ position: 'fixed', bottom: '24px', right: '24px', padding: '16px 20px', borderRadius: '8px', zIndex: 1000, boxShadow: '0 10px 40px rgba(0,0,0,0.5)', background: 'var(--bg2)', border: '1px solid var(--bord)', display: 'flex', gap: '16px', alignItems: 'center', maxWidth: '340px' }}>
           <div style={{ flex: 1 }}>
-            <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '700' }}>🚀 PackLM v2.1 is here!</h4>
-            <p style={{ margin: '4px 0 0 0', fontSize: '13px', lineHeight: '1.4', color: 'rgba(255,255,255,0.9)' }}>Massive upgrade: support for nested JSON, inline arrays, and better token savings.</p>
-            <Link to="/changelog" onClick={() => setShowToast(false)} style={{ color: 'white', textDecoration: 'underline', fontSize: '13px', display: 'inline-block', marginTop: '8px', fontWeight: '700' }}>View Changelog →</Link>
+            <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: 'var(--txt)' }}><span style={{ color: 'var(--acc)', marginRight: '6px' }}>v2.1</span> Nested JSON Support</h4>
+            <Link to="/changelog" onClick={() => setShowToast(false)} style={{ color: 'var(--muted)', textDecoration: 'none', fontSize: '13px', display: 'inline-block', marginTop: '4px', borderBottom: '1px solid var(--bord)', transition: 'color 0.2s' }} onMouseOver={(e) => e.target.style.color = 'var(--txt)'} onMouseOut={(e) => e.target.style.color = 'var(--muted)'}>Read the release notes</Link>
           </div>
-          <button onClick={() => setShowToast(false)} style={{ background: 'rgba(0,0,0,0.15)', border: 'none', color: 'white', padding: '6px', borderRadius: '50%', cursor: 'pointer', display: 'flex' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <button onClick={() => setShowToast(false)} style={{ background: 'transparent', border: 'none', color: 'var(--dim)', padding: '4px', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--txt)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--dim)'}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
       )}
